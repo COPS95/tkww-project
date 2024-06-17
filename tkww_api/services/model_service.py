@@ -35,6 +35,8 @@ class ModelService:
 
         prediction = self.model.predict(input_data)
 
+        Log.info("Prediction made successfully.")
+
         return prediction.tolist(), self.model_name
 
     def change_model(self, model_name: str) -> Dict[str, str]:
@@ -46,16 +48,17 @@ class ModelService:
         Returns:
             dict: A dictionary containing the status and message of the operation.
         """
-        Log.info(f"Changing model to {model_name}")
         try:
             new_model = load_file(self.models_path, model_name)
-            print(new_model)
             if new_model is None:
+                Log.error(f"Model {model_name} not found.")
                 return {"status": "Failed", "error": f"Model {model_name} not found."}
 
             self.model_name = model_name
             self.model = new_model
+            Log.info(f"Model {model_name} loaded successfully.")
             return {"status": "Success", "message": f"Model {model_name} loaded successfully."}
+
         except Exception as e:
             Log.error(f"Error changing model: {e}")
             return {"status": "Failed", "error": str(e)}
