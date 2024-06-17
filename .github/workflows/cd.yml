@@ -1,0 +1,66 @@
+name: Continuous Deployment
+
+on:
+  workflow_run:
+    workflows: ["Continuous Integration"]
+    types:
+      - completed
+    branches:
+      - master
+      
+permissions:
+  contents: write
+
+jobs:
+  deploy-docs:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+
+    - name: Install dependencies
+      run: |
+        pip install poetry
+        poetry install --with docs
+
+    - name: Deploy MkDocs
+      run: |
+        poetry run mkdocs build --clean
+        poetry run mkdocs gh-deploy --force
+
+  deploy-to-ec2:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Log in to Docker Hub
+      uses: docker/login-action@v1
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+
+    - name: Build and Push Docker image
+      uses: docker/build-push-action@v2
+      with:
+        context: .
+        push: true
+        tags: ${{ secrets.DOCKER_USERNAME }}/tkww-api:${{ github.sha }}
+
+    - name: Deploy to EC2 instance
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.EC2_HOST }}
+        username: ${{ secrets.EC2_USER }}
+        key: ${{ secrets.EC2_KEY }}
+        script: |
+          docker stop tkww-api || true
+          docker rm tkww-api || true
+          docker pull ${{ secrets.DOCKER_USERNAME }}/tkww-api:${{ github.sha }}
+          docker run -d --name tkww-api -p 80:80 ${{ secrets.DOCKER_USERNAME }}/tkww-api:${{ github.sha }}

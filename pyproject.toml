@@ -1,0 +1,28 @@
+[tool.poetry]
+name = "tkww-api"
+version = "0.1.0"
+description = ""
+authors = ["COPS95 <omar_pillajo95@hotmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+pydantic = "^2.7.4"
+fastapi = "^0.111.0"
+uvicorn = "^0.30.1"
+scikit-learn = "1.0.2"
+pandas = "^2.2.2"
+
+
+[tool.poetry.group.docs.dependencies]
+mkdocs-material = "^9.5.26"
+mkdocstrings = "^0.25.1"
+mkdocstrings-python = "^1.10.3"
+
+
+[tool.poetry.group.test.dependencies]
+pytest = "^8.2.2"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
